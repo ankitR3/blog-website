@@ -1,13 +1,28 @@
 import type { SignupType } from "@ankitr3/blog-common";
 import { useState, type ChangeEvent } from "react";
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { BACKEND_URL } from "../config";
 
 export const Auth = ({ type }: { type: "signup" | "signin" }) => {
+    const navigate = useNavigate();
     const [postInput, setPostInput] = useState<SignupType>({
         name: "",
         email: "",
         password: ""
     });
+
+    async function sendRequest() {
+        try {
+            const response = await axios.post(`${BACKEND_URL}/api/v1/user/${type === "signup" ? "signup" : "signin"}`, postInput)
+            const jwt = response.data.jwt;
+            localStorage.setItem("token", jwt);
+            navigate("/blogs");
+        } catch(e) {
+            // alert the user here that the user failed
+            alert("Error while signing up")
+        }
+    }
 
     return <div className="h-screen flex justify-center flex-col">
         <div className="flex justify-center">
@@ -24,12 +39,12 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
                     </div>
                 </div>
                 <div className="pt-8">
-                    <LabelledInput label="Name" placeholder="name" onChange={(e) => {
+                    {type === "signup" ? <LabelledInput label="Name" placeholder="name" onChange={(e) => {
                         setPostInput({
                             ...postInput,
                             name: e.target.value
                         })
-                    }} />
+                    }} /> : null}
                     <LabelledInput label="Email" placeholder="email" onChange={(e) => {
                         setPostInput({
                             ...postInput,
@@ -42,7 +57,7 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
                             password: e.target.value
                         })
                     }} />
-                    <button type="button" className="mt-8 w-full text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700">{type === "signup" ? "Sign up" : "Sign in"}</button>
+                    <button onClick={sendRequest} type="button" className="mt-8 w-full text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700">{type === "signup" ? "Sign up" : "Sign in"}</button>
                 </div>
             </div>
         </div>

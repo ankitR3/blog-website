@@ -22,3 +22,16 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+
+
+
+
+
+
+
+
+// store it in istate
+// store it directly here
+// store it in a context variables???
+// create our own custom hook called useBlogs

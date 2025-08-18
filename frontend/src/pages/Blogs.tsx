@@ -1,13 +1,10 @@
-import { FullBlog } from "../components/FullBlog";
-import { useBlog } from "../hooks"
-import { useParams } from "react-router-dom";
+import { AppBar } from "../components/AppBar"
+import { BlogCard } from "../components/BlogCard"
+import { useBlogs } from "../hooks"
 
-// atomFamilies/selectorFamilies
-export const Blog = () => {
-    const { id } = useParams();
-    const { loading, blog} = useBlog({
-        id: id || ""
-    });
+export const Blogs = () => {
+    const {loading, blogs} = useBlogs();
+
     if (loading) {
         return <div role="status" className="max-w-sm animate-pulse">
             <div className="h-2.5 bg-gray-200 rounded-full dark:bg-gray-700 w-48 mb-4"></div>
@@ -20,6 +17,17 @@ export const Blog = () => {
         </div>
     }
     return <div>
-        <FullBlog />
+        <AppBar />
+        <div className="flex justify-center">
+            <div>
+                {blogs.map(blog => <BlogCard
+                    id={blog.id}
+                    authorName={blog.author.name || "Anonymous"}
+                    title={blog.title}
+                    content={blog.content}
+                    publishedDate={"17th Aug 2024"}
+                />)}
+            </div>
+        </div>
     </div>
 }

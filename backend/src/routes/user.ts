@@ -7,7 +7,7 @@ import { signupInput, signinInput } from "@ankitr3/blog-common";
 export const userRouter = new Hono<{
     Bindings:{
     DATABASE_URL: string
-    JWT_SECRET: String
+    JWT_SECRET: string
   }
 }>();
 
