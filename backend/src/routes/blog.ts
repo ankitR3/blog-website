@@ -15,39 +15,44 @@ export const blogRouter = new Hono<{
 }>();
 
 blogRouter.use('/*', async (c, next) => {
+  const authHeader = c.req.header("authorization") || "";
   try {
-    const jwt = c.req.header('Authorization');
-    if (!jwt) {
-      c.status(401);
-      return c.json({ error: "unauthorized" });
+    const user = await verify(authHeader, c.env.JWT_SECRET)
+
+    if (user) {
+      // @ts-ignore
+      c.set("userId", user.id);
+      await next()
+    } else {
+      c.status(403);
+      return c.json({
+        message: "You are not logged in"
+      })
     }
-    const token = jwt.split(' ')[1];
-    const payload = await verify(token, c.env.JWT_SECRET);
-    if (!payload) {
-      c.status(401);
-      return c.json({ error: "unauthorized" });
-    }
-    c.set('userId', payload.id as string);
-    await next()
-  } catch (error) {
-    console.error('Auth middleware error:', error);
-    c.status(401);
-    return c.json({ error: "unauthorized" });
+  } catch (e) {
+    c.status(403);
+    return c.json({
+      message: "authentication failed"
+    })
   }
 });
 
 blogRouter.post('/', async (c) => {
   try {
     const body = await c.req.json();
-    const { success } = createPostInput.safeParse(body);
-    if (!success) {
+    console.log("Request body:", body); // Debug log
+
+    const result = createPostInput.safeParse(body);
+    console.log("Validation result:", result); // Debug log
+    if (!result.success) {
       c.status(411);
       return c.json({
-        message: "Inputs not correct"
+        message: "Inputs not correct",
+        error: result.error.errors // Show the actual errors
       })
     }
     
-    const userId = c.get('userId');
+    const authorId = c.get('userId');
     const prisma = new PrismaClient({
       datasourceUrl: c.env.DATABASE_URL
     }).$extends(withAccelerate())
@@ -56,7 +61,7 @@ blogRouter.post('/', async (c) => {
       data: {
         title: body.title,
         content: body.content,
-        authorId:  Number(userId),
+        authorId:  Number(authorId),
         date: new Date(),
       }
     })
@@ -64,7 +69,9 @@ blogRouter.post('/', async (c) => {
     return c.json({
       id: blog.id
     });
+
   } catch (error) {
+    console.log("Catch block error:", error);
     c.status(500);
     return c.json({ message: "blog post error", error});
   }
